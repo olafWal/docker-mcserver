@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="docker-mcserver" default="build">
+  <property name="workspace" value="${basedir}" />
+  <property name="builddir" value="${workspace}/build" />
+  <property name="image" value="olafwal/mcserver" />
+  <target name="build" depends="prepare, download-mcserver, extract, prepare-config, build-image"/>
+
+  <target name="clean" description="Cleanup">
+    <delete dir="${builddir}"/>
+  </target>
+
+  <target name="prepare" depends="clean" description="Prepare">
+    <mkdir dir="${builddir}"/>
+  </target>
+
+  <target name="download-mcserver" description="Get newest Version">
+    <exec dir="${builddir}" executable="wget">
+      <arg value="-q"/>
+      <arg value="http://builds.cuberite.org/job/MCServer%20Linux%20x64/lastSuccessfulBuild/artifact/MCServer.tar"/>
+    </exec>
+  </target>
+
+  <target name="extract" description="Get newest Version">
+    <exec dir="${builddir}" executable="tar">
+      <arg value="-xf"/>      
+      <arg value="MCServer.tar"/>
+    </exec>
+  </target>
+
+  <target name="prepare-config" description="Prepare confif">
+    <exec executable="cp" failonerror="true">
+      <arg path="config/settings.ini" />
+      <arg path="${builddir}/MCServer/" />
+    </exec>
+
+    <exec executable="cp" failonerror="true">
+      <arg path="config/webadmin.ini" />
+      <arg path="${builddir}/MCServer/" />
+    </exec>
+  </target>
+
+  <target name="build-image" description="Build docker image">
+    <exec  executable="docker">
+      <arg value="build"/>      
+      <arg value="-t"/>      
+      <arg value="olafwal/mcserver"/>
+      <arg value="."/>
+    </exec>
+  </target>
+
+  <target name="push" description="Push docker image">
+    <exec  executable="docker">
+      <arg value="push"/>      
+      <arg value="${image}"/>
+    </exec>
+  </target>
+
+</project>
