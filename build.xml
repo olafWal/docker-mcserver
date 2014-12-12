@@ -4,14 +4,15 @@
   <property name="workspace" value="${basedir}" />
   <property name="builddir" value="${workspace}/build" />
   <property name="image" value="olafwal/mcserver" />
-  <target name="build" depends="prepare, download-mcserver, extract, prepare-config, build-image"/>
+  <target name="build" depends="prepare, download-mcserver, extract, plugins, prepare-config, build-image"/>
 
-  <target name="clean" description="Cleanup">
+  <target name="clean" description="Cleanup" depends="plugins-clean">
     <delete dir="${builddir}"/>
   </target>
 
   <target name="prepare" depends="clean" description="Prepare">
     <mkdir dir="${builddir}"/>
+    <mkdir dir="${builddir}/plugins"/>
   </target>
 
   <target name="download-mcserver" description="Get newest Version">
@@ -28,16 +29,68 @@
     </exec>
   </target>
 
-  <target name="prepare-config" description="Prepare confif">
-    <exec executable="cp" failonerror="true">
-      <arg path="config/settings.ini" />
-      <arg path="${builddir}/MCServer/" />
+  <target name="plugins-clean" description="remove downloads and extracted files">
+    <delete dir="${builddir}/plugins"/>    
+  </target>
+  
+  <target name="plugins" description="get Plugins" depends="plugins-clean">
+    <mkdir dir="${builddir}/plugins/"/>
+    
+    <!-- WorldEdit  -->
+    <exec dir="${builddir}/plugins" executable="wget">
+      <arg value="-q"/>
+      <arg value="-O"/>
+      <arg value="worldedit.zip"/>
+      <arg value="https://github.com/mc-server/WorldEdit/archive/master.zip"/>
     </exec>
 
-    <exec executable="cp" failonerror="true">
-      <arg path="config/webadmin.ini" />
-      <arg path="${builddir}/MCServer/" />
+    <exec dir="${builddir}/plugins" executable="unzip">
+      <arg value="worldedit.zip"/>
     </exec>
+
+    <copy todir="${builddir}/MCServer/Plugins/WorldEdit">
+      <fileset dir="${builddir}/plugins/WorldEdit-master"/>
+    </copy>
+
+    <!-- Hunger Games -->
+    <exec dir="${builddir}/plugins" executable="wget">
+      <arg value="-q"/>
+      <arg value="-O"/>
+      <arg value="hungergames.zip"/>
+      <arg value="https://github.com/mc-server/HungerGames/archive/master.zip"/>
+    </exec>
+
+    <exec dir="${builddir}/plugins" executable="unzip">
+      <arg value="hungergames.zip"/>
+    </exec>
+
+    <copy todir="${builddir}/MCServer/Plugins/HungerGames">
+      <fileset dir="${builddir}/plugins/HungerGames-master"/>
+    </copy>
+
+    <!-- Chest Shop -->
+    <exec dir="${builddir}/plugins" executable="wget">
+      <arg value="-q"/>
+      <arg value="-O"/>
+      <arg value="chestshop.zip"/>
+      <arg value="https://github.com/mc-server/ChestShop/archive/master.zip"/>
+    </exec>
+
+    <exec dir="${builddir}/plugins" executable="unzip">
+      <arg value="chestshop.zip"/>
+    </exec>
+
+    <copy todir="${builddir}/MCServer/Plugins/ChestShop">
+      <fileset dir="${builddir}/plugins/ChestShop-master"/>
+    </copy>
+
+  </target>
+
+
+  <target name="prepare-config" description="Prepare config">
+    <copy todir="${builddir}/MCServer/">
+      <fileset dir="${workspace}/config"/>
+    </copy>
   </target>
 
   <target name="build-image" description="Build docker image">
